@@ -1,0 +1,75 @@
+# ==========================================
+# SECRETS & CONFIGURATIONS (Crucial)
+# ==========================================
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+secrets.json
+
+# TOML Secrets (Streamlit, Rust, Poetry local configs, etc.)
+secrets.toml
+config.secrets.toml
+.streamlit/secrets.toml
+.streamlit/config.toml
+
+# ==========================================
+# DEPENDENCIES & PACKAGE MANAGERS
+# ==========================================
+# Python
+venv/
+.venv/
+env/
+ENV/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.poetry/
+
+# Node.js
+node_modules/
+/npm-debug.log*
+/yarn-error.log*
+/yarn-debug.log*
+
+# ==========================================
+# BUILD OUTPUTS & LOGS
+# ==========================================
+dist/
+build/
+out/
+bin/
+obj/
+*.log
+*.exe
+*.dll
+*.so
+
+# ==========================================
+# IDE & CODE EDITORS
+# ==========================================
+# VS Code
+.vscode/
+!.vscode/extensions.json
+
+# JetBrains (PyCharm, WebStorm, IntelliJ, etc.)
+.idea/
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# ==========================================
+# OPERATING SYSTEMS
+# ==========================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini

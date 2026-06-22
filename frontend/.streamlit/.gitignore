@@ -8,6 +8,8 @@
 *.key
 secrets.json
 
+
+
 # TOML Secrets (Streamlit, Rust, Poetry local configs, etc.)
 secrets.toml
 config.secrets.toml

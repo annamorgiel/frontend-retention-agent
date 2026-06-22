@@ -4,3 +4,4 @@ pandas
 matplotlib
 seaborn
 google-genai
+streamlit-navigation-bar

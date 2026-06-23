@@ -3,7 +3,7 @@ import requests
 from src.gemini_client import ask_gemini
 
 # 1. Page Config & CSS
-st.set_page_config(page_title="API 1: Full Profile Predictor", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="API 1: Behavioral Predictor", layout="wide", initial_sidebar_state="collapsed")
 st.markdown(
     """
     <style>
@@ -19,13 +19,16 @@ st.markdown(
 nav_col, _ = st.columns([3, 1])
 with nav_col:
     page_selected = st.segmented_control(
-        label="Nav", options=["🏠 Home Portal", "📊 API 1 Predictor", "⚡ API 2 Predictor"],
-        default="📊 API 1 Predictor", label_visibility="collapsed", key="nav_p2"
+        label="Nav",
+        options=["🏠 Home Portal", "👤 API 1: Behavioral Predictor", "💳 API 2: Transactional Predictor"],
+        default="👤 API 1: Behavioral Predictor",
+        label_visibility="collapsed",
+        key="nav_p2"
     )
 if page_selected == "🏠 Home Portal": st.switch_page("app.py")
-elif page_selected == "⚡ API 2 Predictor": st.switch_page("pages/3_kkbox.py")
+elif page_selected == "💳 API 2: Transactional Predictor": st.switch_page("pages/3_kkbox.py")
 
-st.markdown("### 📊 API 1: Logistic Regression Classifier (with Explanations)")
+st.markdown("### 👤 API 1: Behavioral Predictor (with SHAP Explanations)")
 
 # 3. Callbacks (Mock Data & Reset)
 def load_mock_api1():
@@ -39,7 +42,7 @@ def load_mock_api1():
     })
 
 def reset_api1():
-    # 🔥 THE FIX: Explicitly push 'None' to every widget to force the UI to clear
+    # Explicitly push 'None' to every widget to force the UI to clear
     st.session_state.update({
         "p2_gender": None, "p2_subtype": None, "p2_paperless": None,
         "p2_total_charges": None, "p2_age": None, "p2_payment": None,
@@ -48,14 +51,14 @@ def reset_api1():
         "p2_parental": None, "p2_genre": None, "p2_duration": None,
         "p2_watchlist": None, "p2_device": None, "p2_multidevice": None, "p2_subtitles": None
     })
-    # Also clear the prediction output area
+    # Clear the prediction output area
     st.session_state.pop("prediction_result", None)
     st.session_state.pop("explanation_result", None)
 
 inputs_are_open = "prediction_result" not in st.session_state
 
 # 4. Inputs
-with st.expander("👤 Configure Subscriber Metrics", expanded=inputs_are_open):
+with st.expander("👤 Configure Behavioral Metrics", expanded=inputs_are_open):
 
     # 🔘 Side-by-side Action Buttons
     btn_col1, btn_col2 = st.columns(2)
@@ -95,7 +98,7 @@ with st.expander("👤 Configure Subscriber Metrics", expanded=inputs_are_open):
             multi_device = st.selectbox("Multi-Device", ["Yes", "No"], index=None, key="p2_multidevice")
             subtitles = st.selectbox("Subtitles", ["Yes", "No"], index=None, key="p2_subtitles")
 
-    run_prediction = st.button("🚀 Run Prediction & Explanation Analysis", use_container_width=True, type="primary", key="p2_btn_submit")
+    run_prediction = st.button("🚀 Run Behavioral Prediction & SHAP Analysis", use_container_width=True, type="primary", key="p2_btn_submit")
 
 # 5. API Execution & Validation
 if run_prediction:
@@ -116,7 +119,7 @@ if run_prediction:
 
         BASE_URL = "https://retention-agent-api-306889378080.europe-west1.run.app"
 
-        with st.spinner("Analyzing subscriber data and calculating explanations..."):
+        with st.spinner("Analyzing subscriber data and calculating SHAP values..."):
             try:
                 res_pred = requests.get(f"{BASE_URL}/predict", params=payload, timeout=7)
                 if res_pred.status_code == 200:
@@ -131,9 +134,9 @@ if run_prediction:
                         if res_expl.status_code == 200:
                             st.session_state.explanation_result = res_expl.json()
                         else:
-                            st.session_state.explanation_result = {"Notice": f"Explanation API returned HTTP {res_expl.status_code}."}
+                            st.session_state.explanation_result = {"Notice": f"SHAP API returned HTTP {res_expl.status_code}."}
                     except Exception:
-                        st.session_state.explanation_result = {"Notice": "Explanation API was unreachable."}
+                        st.session_state.explanation_result = {"Notice": "SHAP API was unreachable."}
 
                     st.rerun()
                 else:
@@ -148,20 +151,20 @@ if "prediction_result" in st.session_state:
     with out_col1:
         st.markdown("##### 📋 Prediction Output")
         st.json(st.session_state.prediction_result)
-        st.markdown("##### 🔍 Feature Explanations")
+        st.markdown("##### 🔍 Computed SHAP Values")
         st.json(st.session_state.explanation_result)
 
     with out_col2:
-        if st.button("✨ Ask Gemini for Data-Driven Strategies", use_container_width=True, key="p2_btn_gemini"):
+        if st.button("✨ Ask Gemini for SHAP-Guided Strategies", use_container_width=True, key="p2_btn_gemini"):
             prompt = f"""
-            You are an expert customer retention data scientist.
+            You are an expert customer retention data scientist specializing in behavioral profiling.
             Profile: {st.session_state.last_payload}
             Churn Probability: {st.session_state.prediction_result}
-            Feature Explanations: {st.session_state.explanation_result}
+            SHAP Influences: {st.session_state.explanation_result}
 
             Tasks:
-            1. Write an executive summary. Explicitly reference the top 2 features from the explanations to explain why the model made this specific prediction.
-            2. Provide 3 highly specific user interventions designed to directly counteract the top risk vectors.
+            1. Write an executive summary. Explicitly reference the top 2 features from the SHAP context to explain why the behavioral model made this specific prediction.
+            2. Provide 3 highly specific user interventions designed to directly neutralize the top risk vectors identified by the SHAP values.
             """
-            with st.spinner("Gemini is analyzing the explanation drivers..."):
+            with st.spinner("Gemini is analyzing the SHAP force plot drivers..."):
                 st.write(ask_gemini(prompt))

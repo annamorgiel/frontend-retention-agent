@@ -28,15 +28,15 @@ nav_col, _ = st.columns([3, 1])
 with nav_col:
     page_selected = st.segmented_control(
         label="Navigation Menu",
-        options=["🏠 Home Portal", "📊 API 1 Predictor", "⚡ API 2 Predictor"],
+        options=["🏠 Home Portal", "👤 API 1: Behavioral Predictor", "💳 API 2: Transactional Predictor"],
         default="🏠 Home Portal", label_visibility="collapsed", key="nav_home"
     )
 
-if page_selected == "📊 API 1 Predictor": st.switch_page("pages/2_log_reg.py")
-elif page_selected == "⚡ API 2 Predictor": st.switch_page("pages/3_kkbox.py")
+if page_selected == "👤 API 1: Behavioral Predictor": st.switch_page("pages/2_log_reg.py")
+elif page_selected == "💳 API 2: Transactional Predictor": st.switch_page("pages/3_kkbox.py")
 
 # Compact Title Area
-st.markdown("### 🎯 Customer Retention Analytics Portal")
+st.markdown("#### 🎯 Customer Retention Analytics Agent")
 
 # 🧭 THE ROUTING WIZARD
 with st.container(border=True):
@@ -44,8 +44,8 @@ with st.container(border=True):
         "**Which data do you primarily have?**",
         [
             "🔍 Unsure / Show me all options",
-            "📊 Customer engagement data (Demographics, content preferences, support tickets)",
-            "⚡ Subscription and payment data (Transaction logs, auto-renews, plan lengths)"
+            "👤 Customer engagement behavioral data (Demographics, content preferences, support tickets)",
+            "💳 Subscription and payment transactional data (Transaction logs, auto-renews, plan lengths)"
         ],
         index=None  # 🔥 Starts empty to force user engagement
     )
@@ -64,10 +64,11 @@ show_api2_details = is_unsure or is_api2
 col1, col2 = st.columns(2, gap="large")
 
 with col1:
-    if is_api1: st.success("✨ **Best Match: API 1**")
+    # Highlight badge only appears if explicitly selected
+    if is_api1: st.success("✨ **Best Match: API 1: Behavioral Predictor** 👤")
 
     with st.container(border=True):
-        st.markdown("**📊 API 1: Full Profile Predictor** (Logistic Regression)")
+        st.markdown("**👤 API 1: Behavioral Predictor** with Logistic Regression model trained on a synthetic dataset")
 
         with st.expander("📋 View 19 Required Features", expanded=show_api1_details):
             features_api1 = [
@@ -83,16 +84,16 @@ with col1:
             with f_col2:
                 for f in features_api1[half_1:]: st.markdown(f"<span style='font-size:0.85em'>- {f}</span>", unsafe_allow_html=True)
 
-        # Show Launch button if it's the exact match OR if they are exploring all options
-        if show_api1_details:
-            if st.button("🚀 Launch API 1 Engine", type="primary", use_container_width=True, key="launch_1"):
-                st.switch_page("pages/2_log_reg.py")
+        # Launch button is now ALWAYS visible
+        if st.button("🚀 Launch API 1: Behavioral Predictor Engine 👤", type="primary", use_container_width=True, key="launch_1"):
+            st.switch_page("pages/2_log_reg.py")
 
 with col2:
-    if is_api2: st.success("✨ **Best Match: API 2**")
+    # Highlight badge only appears if explicitly selected
+    if is_api2: st.success("✨ **Best Match: API 2: Transactional Predictor** 💳 ")
 
     with st.container(border=True):
-        st.markdown("**⚡ API 2: KKBox Predictor** (Sequential Engine)")
+        st.markdown("**💳 API 2: Transactional Predictor** with KKBox model trained on a non-synthetic dataset Sequential Engine")
 
         with st.expander("📋 View 18 Required Features", expanded=show_api2_details):
             features_api2 = [
@@ -109,12 +110,9 @@ with col2:
             with f_col4:
                 for f in features_api2[half_2:]: st.markdown(f"<span style='font-size:0.85em'>- {f}</span>", unsafe_allow_html=True)
 
-        # Show Launch button if it's the exact match OR if they are exploring all options
-        if show_api2_details:
-            if st.button("🚀 Launch API 2 Engine", type="primary", use_container_width=True, key="launch_2"):
-                st.switch_page("pages/3_kkbox.py")
-
-st.markdown("---")
+        # Launch button is now ALWAYS visible
+        if st.button("🚀 Launch API 2: Transactional Predictor Engine 💳", type="primary", use_container_width=True, key="launch_2"):
+            st.switch_page("pages/3_kkbox.py")
 
 # Glossary
 with st.expander("📖 ML Metric Glossary (Click to expand)", expanded=False):

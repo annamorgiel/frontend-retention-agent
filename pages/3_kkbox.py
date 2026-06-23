@@ -3,7 +3,7 @@ import requests
 from src.gemini_client import ask_gemini
 
 # 1. Page Config & CSS
-st.set_page_config(page_title="API 2: KKBox Streaming", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="API 2: Transactional Predictor", layout="wide", initial_sidebar_state="collapsed")
 st.markdown(
     """
     <style>
@@ -19,13 +19,16 @@ st.markdown(
 nav_col, _ = st.columns([3, 1])
 with nav_col:
     page_selected = st.segmented_control(
-        label="Nav", options=["🏠 Home Portal", "📊 API 1 Predictor", "⚡ API 2 Predictor"],
-        default="⚡ API 2 Predictor", label_visibility="collapsed", key="nav_p3"
+        label="Nav",
+        options=["🏠 Home Portal", "👤 API 1: Behavioral Predictor", "💳 API 2: Transactional Predictor"],
+        default="💳 API 2: Transactional Predictor",
+        label_visibility="collapsed",
+        key="nav_p3"
     )
 if page_selected == "🏠 Home Portal": st.switch_page("app.py")
-elif page_selected == "📊 API 1 Predictor": st.switch_page("pages/2_log_reg.py")
+elif page_selected == "👤 API 1: Behavioral Predictor": st.switch_page("pages/2_log_reg.py")
 
-st.markdown("### ⚡ API 2: Sequential Transaction Engine (with SHAP Explanations)")
+st.markdown("### 💳 API 2: Transactional Predictor with SHAP Explanations")
 
 # 3. Callbacks (Mock Data & Reset)
 def load_mock_api2():
@@ -38,7 +41,7 @@ def load_mock_api2():
     })
 
 def reset_api2():
-    # 🔥 Explicitly push 'None' to clear the widgets
+    # Explicitly push 'None' to clear the widgets
     st.session_state.update({
         "p3_city": None, "p3_gender": None, "p3_age": None, "p3_invalid": None,
         "p3_reg": None, "p3_tenure": None, "p3_txns": None, "p3_cancels": None,
@@ -53,7 +56,7 @@ def reset_api2():
 inputs_are_open = "kkbox_prediction_result" not in st.session_state
 
 # 4. Inputs
-with st.expander("🎵 Configure KKBox Subscriber Metrics", expanded=inputs_are_open):
+with st.expander("💳 Configure Transactional Metrics", expanded=inputs_are_open):
 
     # 🔘 Side-by-side Action Buttons
     btn_col1, btn_col2 = st.columns(2)
@@ -75,7 +78,7 @@ with st.expander("🎵 Configure KKBox Subscriber Metrics", expanded=inputs_are_
         tenure_days = st.number_input("Tenure (Days)", value=None, step=1.0, key="p3_tenure")
     with col2:
         st.subheader("💳 Transactions")
-        n_transactions = st.number_input("Total Txns", value=None, step=1.0, key="p3_txns")
+        n_transactions = st.number_input("Total Transactions", value=None, step=1.0, key="p3_txns")
         n_cancels_before_cutoff = st.number_input("Cancels Before Cutoff", value=None, step=1.0, key="p3_cancels")
         days_since_last_txn = st.number_input("Days Since Last Txn", value=None, step=1.0, key="p3_last_txn")
         latest_payment_method_id = st.number_input("Latest Pay Method ID", value=None, step=1.0, key="p3_pay_id")
@@ -90,7 +93,7 @@ with st.expander("🎵 Configure KKBox Subscriber Metrics", expanded=inputs_are_
         discount_ratio = st.number_input("Discount Ratio", value=None, step=0.1, key="p3_discount")
         days_until_expiry_at_cutoff = st.number_input("Days to Expiry", value=None, step=1.0, key="p3_expiry")
 
-    run_prediction = st.button("🚀 Run Prediction & SHAP Analysis", use_container_width=True, type="primary", key="p3_btn_submit")
+    run_prediction = st.button("🚀 Run Transactional Prediction & SHAP", use_container_width=True, type="primary", key="p3_btn_submit")
 
 # 5. API Execution & Validation
 if run_prediction:
@@ -111,7 +114,7 @@ if run_prediction:
 
         BASE_URL = "https://retention-agent-api-306889378080.europe-west1.run.app"
 
-        with st.spinner("Analyzing streaming profile and calculating SHAP values..."):
+        with st.spinner("Analyzing transactional profile and calculating SHAP values..."):
             try:
                 res_pred = requests.get(f"{BASE_URL}/predict_kkbox", params=payload, timeout=7)
                 if res_pred.status_code == 200:
@@ -143,20 +146,20 @@ if "kkbox_prediction_result" in st.session_state:
     with out_col1:
         st.markdown("##### 📋 Prediction Output")
         st.json(st.session_state.kkbox_prediction_result)
-        st.markdown("##### 🔍 Local SHAP Values")
+        st.markdown("##### 🔍 Computed SHAP Values")
         st.json(st.session_state.kkbox_shap_result)
 
     with out_col2:
         if st.button("✨ Ask Gemini for SHAP-Guided Strategies", use_container_width=True, key="p3_btn_gemini"):
             prompt = f"""
-            You are an expert customer retention data scientist specializing in streaming platforms.
+            You are an expert customer retention data scientist specializing in transactional behavior and subscription platforms.
             Profile: {st.session_state.kkbox_last_payload}
             Churn Probability: {st.session_state.kkbox_prediction_result}
             SHAP Influences: {st.session_state.kkbox_shap_result}
 
             Tasks:
-            1. Write an executive summary. Explicitly reference the top 2 features from the SHAP context to explain why the model made this specific prediction.
-            2. Provide 3 highly specific user interventions designed to directly neutralize the top risk vectors.
+            1. Write an executive summary. Explicitly reference the top 2 features from the SHAP context to explain why the transactional model made this specific prediction.
+            2. Provide 3 highly specific user interventions designed to directly neutralize the top risk vectors identified by the SHAP values.
             """
             with st.spinner("Gemini is analyzing the SHAP force plot drivers..."):
                 st.write(ask_gemini(prompt))

@@ -69,7 +69,7 @@ if run_prediction:
     payload = { "AccountAge": int(account_age), "MonthlyCharges": float(monthly_charges), "TotalCharges": float(total_charges), "SubscriptionType": subscription_type, "PaymentMethod": payment_method, "PaperlessBilling": paperless_billing, "ContentType": content_type, "MultiDeviceAccess": multi_device, "DeviceRegistered": device_registered, "ViewingHoursPerWeek": float(viewing_hours), "AverageViewingDuration": float(avg_duration), "ContentDownloadsPerMonth": int(downloads), "GenrePreference": genre_preference, "UserRating": float(user_rating), "SupportTicketsPerMonth": int(support_tickets), "Gender": gender, "WatchlistSize": int(watchlist_size), "ParentalControl": parental_control, "SubtitlesEnabled": subtitles }
     with st.spinner("Analyzing..."):
         try:
-            response = requests.get("https://retention-agent-651418512573.europe-west1.run.app/predict", params=payload)
+            response = requests.get("https://retention-agent-api-401407420810.europe-west1.run.app/predict", params=payload)
             if response.status_code == 200:
                 st.session_state.prediction_result = response.json()
                 st.session_state.last_payload = payload

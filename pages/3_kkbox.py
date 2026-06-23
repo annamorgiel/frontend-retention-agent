@@ -64,7 +64,7 @@ if run_prediction:
     payload = { "city": int(city), "bd_clean": float(bd_clean), "bd_was_invalid": int(bd_was_invalid), "gender_filled": gender_filled, "registered_via": int(registered_via), "tenure_days": float(tenure_days), "n_transactions": float(n_transactions), "n_cancels_before_cutoff": float(n_cancels_before_cutoff), "mean_actual_paid": float(mean_actual_paid), "sum_actual_paid": float(sum_actual_paid), "mean_list_price": float(mean_list_price), "mean_plan_days": float(mean_plan_days), "mean_auto_renew": float(mean_auto_renew), "n_unique_payment_methods": float(n_unique_payment_methods), "discount_ratio": float(discount_ratio), "days_since_last_txn": float(days_since_last_txn), "days_until_expiry_at_cutoff": float(days_until_expiry_at_cutoff), "latest_payment_method_id": float(latest_payment_method_id) }
     with st.spinner("Analyzing..."):
         try:
-            response = requests.get("https://retention-agent-651418512573.europe-west1.run.app/predict_kkbox", params=payload)
+            response = requests.get("https://retention-agent-api-401407420810.europe-west1.run.app", params=payload)
             if response.status_code == 200:
                 st.session_state.kkbox_prediction_result = response.json()
                 st.session_state.kkbox_last_payload = payload

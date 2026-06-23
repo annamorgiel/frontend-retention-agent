@@ -41,7 +41,6 @@ def load_mock_api2():
     })
 
 def reset_api2():
-    # Explicitly push 'None' to clear the widgets
     st.session_state.update({
         "p3_city": None, "p3_gender": None, "p3_age": None, "p3_invalid": None,
         "p3_reg": None, "p3_tenure": None, "p3_txns": None, "p3_cancels": None,
@@ -49,7 +48,6 @@ def reset_api2():
         "p3_mean_paid": None, "p3_sum_paid": None, "p3_list_price": None,
         "p3_plan_days": None, "p3_renew": None, "p3_discount": None, "p3_expiry": None
     })
-    # Clear the prediction area
     st.session_state.pop("kkbox_prediction_result", None)
     st.session_state.pop("kkbox_shap_result", None)
 
@@ -58,7 +56,6 @@ inputs_are_open = "kkbox_prediction_result" not in st.session_state
 # 4. Inputs
 with st.expander("💳 Configure Transactional Metrics", expanded=inputs_are_open):
 
-    # 🔘 Side-by-side Action Buttons
     btn_col1, btn_col2 = st.columns(2)
     with btn_col1:
         st.button("🪄 Auto-Fill Mock Profile", on_click=load_mock_api2, key="p3_mock_btn", use_container_width=True)
@@ -78,7 +75,7 @@ with st.expander("💳 Configure Transactional Metrics", expanded=inputs_are_ope
         tenure_days = st.number_input("Tenure (Days)", value=None, step=1.0, key="p3_tenure")
     with col2:
         st.subheader("💳 Transactions")
-        n_transactions = st.number_input("Total Transactions", value=None, step=1.0, key="p3_txns")
+        n_transactions = st.number_input("Total Txns", value=None, step=1.0, key="p3_txns")
         n_cancels_before_cutoff = st.number_input("Cancels Before Cutoff", value=None, step=1.0, key="p3_cancels")
         days_since_last_txn = st.number_input("Days Since Last Txn", value=None, step=1.0, key="p3_last_txn")
         latest_payment_method_id = st.number_input("Latest Pay Method ID", value=None, step=1.0, key="p3_pay_id")
@@ -114,7 +111,7 @@ if run_prediction:
 
         BASE_URL = "https://retention-agent-api-306889378080.europe-west1.run.app"
 
-        with st.spinner("Analyzing transactional profile and calculating SHAP values..."):
+        with st.spinner("Analyzing transactional profile and fetching SHAP values..."):
             try:
                 res_pred = requests.get(f"{BASE_URL}/predict_kkbox", params=payload, timeout=7)
                 if res_pred.status_code == 200:
@@ -140,26 +137,47 @@ if run_prediction:
             except requests.exceptions.RequestException as e:
                 st.error(f"❌ Cloud service connection error: {e}")
 
-# 6. Output & Gemini
+# 6. Output & Gemini (Frontend Filtering)
 if "kkbox_prediction_result" in st.session_state:
     out_col1, out_col2 = st.columns([1, 2], gap="large")
-    with out_col1:
-        st.markdown("##### 📋 Prediction Output")
-        st.json(st.session_state.kkbox_prediction_result)
-        st.markdown("##### 🔍 Computed SHAP Values")
-        st.json(st.session_state.kkbox_shap_result)
 
     with out_col2:
+        with st.container(border=True):
+            st.markdown("**⚙️ Adjust SHAP Scope (Frontend)**")
+            shap_limit = st.radio(
+                "Number of features to display and analyze:",
+                options=["1", "2", "3", "4", "5"],
+                index=4, horizontal=True, key="p3_shap_limit"
+            )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # ✂️ Slice the SHAP results based on the radio button without re-running the API
+        raw_shap = st.session_state.kkbox_shap_result
+        display_shap = raw_shap
+
+        limit = int(shap_limit)
+        if isinstance(raw_shap, dict) and "Notice" not in raw_shap:
+            display_shap = dict(list(raw_shap.items())[:limit])
+        elif isinstance(raw_shap, list):
+            display_shap = raw_shap[:limit]
+
         if st.button("✨ Ask Gemini for SHAP-Guided Strategies", use_container_width=True, key="p3_btn_gemini"):
             prompt = f"""
             You are an expert customer retention data scientist specializing in transactional behavior and subscription platforms.
             Profile: {st.session_state.kkbox_last_payload}
             Churn Probability: {st.session_state.kkbox_prediction_result}
-            SHAP Influences: {st.session_state.kkbox_shap_result}
+            SHAP Influences: {display_shap}
 
             Tasks:
-            1. Write an executive summary. Explicitly reference the top 2 features from the SHAP context to explain why the transactional model made this specific prediction.
-            2. Provide 3 highly specific user interventions designed to directly neutralize the top risk vectors identified by the SHAP values.
+            1. Write an executive summary. Explicitly reference the top {shap_limit} features from the SHAP context to explain why the transactional model made this specific prediction.
+            2. Provide highly specific user interventions designed to directly neutralize the risk vectors identified by the SHAP values.
             """
             with st.spinner("Gemini is analyzing the SHAP force plot drivers..."):
                 st.write(ask_gemini(prompt))
+
+    with out_col1:
+        st.markdown("##### 📋 Prediction Output")
+        st.json(st.session_state.kkbox_prediction_result)
+        st.markdown("##### 🔍 Computed SHAP Values")
+        st.json(display_shap)

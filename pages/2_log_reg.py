@@ -28,7 +28,7 @@ with nav_col:
 if page_selected == "🏠 Home Portal": st.switch_page("app.py")
 elif page_selected == "💳 API 2: Transactional Predictor": st.switch_page("pages/3_kkbox.py")
 
-st.markdown("### 👤 API 1: Behavioral Predictor (with SHAP Explanations)")
+st.markdown("### 👤 API 1: Behavioral Predictor with SHAP Explanations")
 
 # 3. Callbacks (Mock Data & Reset)
 def load_mock_api1():
@@ -42,16 +42,13 @@ def load_mock_api1():
     })
 
 def reset_api1():
-    # Explicitly push 'None' to every widget to force the UI to clear
     st.session_state.update({
-        "p2_gender": None, "p2_subtype": None, "p2_paperless": None,
-        "p2_total_charges": None, "p2_age": None, "p2_payment": None,
-        "p2_monthly_charges": None, "p2_tickets": None, "p2_content": None,
-        "p2_hours": None, "p2_downloads": None, "p2_rating": None,
-        "p2_parental": None, "p2_genre": None, "p2_duration": None,
-        "p2_watchlist": None, "p2_device": None, "p2_multidevice": None, "p2_subtitles": None
+        "p2_gender": None, "p2_subtype": None, "p2_paperless": None, "p2_total_charges": None,
+        "p2_age": None, "p2_payment": None, "p2_monthly_charges": None, "p2_tickets": None,
+        "p2_content": None, "p2_hours": None, "p2_downloads": None, "p2_rating": None,
+        "p2_parental": None, "p2_genre": None, "p2_duration": None, "p2_watchlist": None,
+        "p2_device": None, "p2_multidevice": None, "p2_subtitles": None
     })
-    # Clear the prediction output area
     st.session_state.pop("prediction_result", None)
     st.session_state.pop("explanation_result", None)
 
@@ -60,7 +57,6 @@ inputs_are_open = "prediction_result" not in st.session_state
 # 4. Inputs
 with st.expander("👤 Configure Behavioral Metrics", expanded=inputs_are_open):
 
-    # 🔘 Side-by-side Action Buttons
     btn_col1, btn_col2 = st.columns(2)
     with btn_col1:
         st.button("🪄 Auto-Fill Mock Data", on_click=load_mock_api1, key="p2_mock_btn", use_container_width=True)
@@ -119,7 +115,7 @@ if run_prediction:
 
         BASE_URL = "https://retention-agent-api-306889378080.europe-west1.run.app"
 
-        with st.spinner("Analyzing subscriber data and calculating SHAP values..."):
+        with st.spinner("Analyzing subscriber data and fetching SHAP values..."):
             try:
                 res_pred = requests.get(f"{BASE_URL}/predict", params=payload, timeout=7)
                 if res_pred.status_code == 200:
@@ -145,26 +141,47 @@ if run_prediction:
             except requests.exceptions.RequestException as e:
                 st.error(f"❌ Cloud service connection error: {e}")
 
-# 6. Output & Gemini
+# 6. Output & Gemini (Frontend Filtering)
 if "prediction_result" in st.session_state:
     out_col1, out_col2 = st.columns([1, 2], gap="large")
-    with out_col1:
-        st.markdown("##### 📋 Prediction Output")
-        st.json(st.session_state.prediction_result)
-        st.markdown("##### 🔍 Computed SHAP Values")
-        st.json(st.session_state.explanation_result)
 
     with out_col2:
+        with st.container(border=True):
+            st.markdown("**⚙️ Select number of SHAP features for the explainability analysis**")
+            shap_limit = st.radio(
+                "Number of features to display and analyze:",
+                options=["1", "2", "3", "4", "5"],
+                index=4, horizontal=True, key="p2_shap_limit"
+            )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # ✂️ Slice the SHAP results based on the radio button without re-running the API
+        raw_shap = st.session_state.explanation_result
+        display_shap = raw_shap
+
+        limit = int(shap_limit)
+        if isinstance(raw_shap, dict) and "Notice" not in raw_shap:
+            display_shap = dict(list(raw_shap.items())[:limit])
+        elif isinstance(raw_shap, list):
+            display_shap = raw_shap[:limit]
+
         if st.button("✨ Ask Gemini for SHAP-Guided Strategies", use_container_width=True, key="p2_btn_gemini"):
             prompt = f"""
             You are an expert customer retention data scientist specializing in behavioral profiling.
             Profile: {st.session_state.last_payload}
             Churn Probability: {st.session_state.prediction_result}
-            SHAP Influences: {st.session_state.explanation_result}
+            SHAP Influences: {display_shap}
 
             Tasks:
-            1. Write an executive summary. Explicitly reference the top 2 features from the SHAP context to explain why the behavioral model made this specific prediction.
-            2. Provide 3 highly specific user interventions designed to directly neutralize the top risk vectors identified by the SHAP values.
+            1. Write an executive summary. Explicitly reference the top {shap_limit} features from the SHAP context to explain why the behavioral model made this specific prediction.
+            2. Provide highly specific user interventions designed to directly neutralize the risk vectors identified by the SHAP values.
             """
             with st.spinner("Gemini is analyzing the SHAP force plot drivers..."):
                 st.write(ask_gemini(prompt))
+
+    with out_col1:
+        st.markdown("##### 📋 Prediction Output")
+        st.json(st.session_state.prediction_result)
+        st.markdown("##### 🔍 Computed SHAP Values")
+        st.json(display_shap)

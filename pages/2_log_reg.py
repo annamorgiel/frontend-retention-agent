@@ -28,7 +28,7 @@ with nav_col:
 if page_selected == "🏠 Home Portal": st.switch_page("app.py")
 elif page_selected == "💳 API 2: Transactional Predictor": st.switch_page("pages/3_kkbox.py")
 
-st.markdown("### 👤 API 1: Behavioral Predictor with SHAP Explanations")
+st.markdown("### 👤 API 1: Behavioral Predictor (with SHAP Explanations)")
 
 # 3. Callbacks (Mock Data & Reset)
 def load_mock_api1():
@@ -147,7 +147,7 @@ if "prediction_result" in st.session_state:
 
     with out_col2:
         with st.container(border=True):
-            st.markdown("**⚙️ Select number of SHAP features for the explainability analysis**")
+            st.markdown("**⚙️ Adjust SHAP Scope (Frontend)**")
             shap_limit = st.radio(
                 "Number of features to display and analyze:",
                 options=["1", "2", "3", "4", "5"],
@@ -156,12 +156,15 @@ if "prediction_result" in st.session_state:
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # ✂️ Slice the SHAP results based on the radio button without re-running the API
+        # ✂️ Slice the SHAP results cleanly to remove redundant prediction keys
         raw_shap = st.session_state.explanation_result
         display_shap = raw_shap
 
         limit = int(shap_limit)
-        if isinstance(raw_shap, dict) and "Notice" not in raw_shap:
+        if isinstance(raw_shap, dict) and "top_drivers" in raw_shap:
+            # Extract only the drivers list and slice it
+            display_shap = {"top_drivers": raw_shap["top_drivers"][:limit]}
+        elif isinstance(raw_shap, dict) and "Notice" not in raw_shap:
             display_shap = dict(list(raw_shap.items())[:limit])
         elif isinstance(raw_shap, list):
             display_shap = raw_shap[:limit]

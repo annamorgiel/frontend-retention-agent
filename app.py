@@ -1,5 +1,4 @@
 import streamlit as st
-import requests
 
 st.set_page_config(page_title="Customer Retention Agent", layout="wide", initial_sidebar_state="collapsed")
 
@@ -37,43 +36,85 @@ if page_selected == "📊 API 1 Predictor": st.switch_page("pages/2_log_reg.py")
 elif page_selected == "⚡ API 2 Predictor": st.switch_page("pages/3_kkbox.py")
 
 # Compact Title Area
-st.markdown("### 🎯 Customer Retention Analytics Portal & Operational Engines")
-st.caption("Centralized ML engine control hub. Select an engine above to begin.")
+st.markdown("### 🎯 Customer Retention Analytics Portal")
 
-col1, col2 = st.columns(2, gap="medium")
+# 🧭 THE ROUTING WIZARD
+with st.container(border=True):
+    data_type = st.radio(
+        "**Which data do you primarily have?**",
+        [
+            "🔍 Unsure / Show me all options",
+            "📊 Customer engagement data (Demographics, content preferences, support tickets)",
+            "⚡ Subscription and payment data (Transaction logs, auto-renews, plan lengths)"
+        ],
+        index=None  # 🔥 Starts empty to force user engagement
+    )
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# Smart State Routing Logic
+is_unsure = data_type is not None and "Unsure" in data_type
+is_api1 = data_type is not None and "engagement" in data_type
+is_api2 = data_type is not None and "Subscription" in data_type
+
+# Determine Expander States
+show_api1_details = is_unsure or is_api1
+show_api2_details = is_unsure or is_api2
+
+col1, col2 = st.columns(2, gap="large")
 
 with col1:
-    st.markdown("**📊 API 1: Full Profile Predictor** (Logistic Regression)")
-    with st.expander("📋 View 19 Required Features"):
-        features_api1 = [
-            "Gender", "Account Age", "Subscription Type", "Payment Method",
-            "Paperless Billing", "Monthly Charges", "Total Charges", "Support Tickets",
-            "Content Type", "Genre", "Viewing Hours", "Avg Duration", "Downloads",
-            "Watchlist Size", "User Rating", "Device", "Parental Control", "Multi-Device", "Subtitles"
-        ]
-        f_col1, f_col2 = st.columns(2)
-        half_1 = len(features_api1) // 2 + 1
-        with f_col1:
-            for f in features_api1[:half_1]: st.markdown(f"<span style='font-size:0.85em'>- {f}</span>", unsafe_allow_html=True)
-        with f_col2:
-            for f in features_api1[half_1:]: st.markdown(f"<span style='font-size:0.85em'>- {f}</span>", unsafe_allow_html=True)
+    if is_api1: st.success("✨ **Best Match: API 1**")
+
+    with st.container(border=True):
+        st.markdown("**📊 API 1: Full Profile Predictor** (Logistic Regression)")
+
+        with st.expander("📋 View 19 Required Features", expanded=show_api1_details):
+            features_api1 = [
+                "Gender", "Account Age", "Subscription Type", "Payment Method",
+                "Paperless Billing", "Monthly Charges", "Total Charges", "Support Tickets",
+                "Content Type", "Genre", "Viewing Hours", "Avg Duration", "Downloads",
+                "Watchlist Size", "User Rating", "Device", "Parental Control", "Multi-Device", "Subtitles"
+            ]
+            f_col1, f_col2 = st.columns(2)
+            half_1 = len(features_api1) // 2 + 1
+            with f_col1:
+                for f in features_api1[:half_1]: st.markdown(f"<span style='font-size:0.85em'>- {f}</span>", unsafe_allow_html=True)
+            with f_col2:
+                for f in features_api1[half_1:]: st.markdown(f"<span style='font-size:0.85em'>- {f}</span>", unsafe_allow_html=True)
+
+        # Show Launch button if it's the exact match OR if they are exploring all options
+        if show_api1_details:
+            if st.button("🚀 Launch API 1 Engine", type="primary", use_container_width=True, key="launch_1"):
+                st.switch_page("pages/2_log_reg.py")
 
 with col2:
-    st.markdown("**⚡ API 2: KKBox Predictor** (Sequential Engine)")
-    with st.expander("📋 View 18 Required Features"):
-        features_api2 = [
-            "City Code", "Cleaned Age", "Age Invalid Flag", "Gender Imputed",
-            "Registration Method", "Total Tenure", "Total Transactions", "Cancellations",
-            "Mean Actual Paid", "Sum Actual Paid", "Mean List Price", "Mean Plan Duration",
-            "Auto-Renew Ratio", "Unique Payment Methods", "Discount Ratio", "Days Since Last Txn",
-            "Days Until Expiry", "Latest Payment Method"
-        ]
-        f_col3, f_col4 = st.columns(2)
-        half_2 = len(features_api2) // 2
-        with f_col3:
-            for f in features_api2[:half_2]: st.markdown(f"<span style='font-size:0.85em'>- {f}</span>", unsafe_allow_html=True)
-        with f_col4:
-            for f in features_api2[half_2:]: st.markdown(f"<span style='font-size:0.85em'>- {f}</span>", unsafe_allow_html=True)
+    if is_api2: st.success("✨ **Best Match: API 2**")
+
+    with st.container(border=True):
+        st.markdown("**⚡ API 2: KKBox Predictor** (Sequential Engine)")
+
+        with st.expander("📋 View 18 Required Features", expanded=show_api2_details):
+            features_api2 = [
+                "City Code", "Cleaned Age", "Age Invalid Flag", "Gender Imputed",
+                "Registration Method", "Total Tenure", "Total Transactions", "Cancellations",
+                "Mean Actual Paid", "Sum Actual Paid", "Mean List Price", "Mean Plan Duration",
+                "Auto-Renew Ratio", "Unique Payment Methods", "Discount Ratio", "Days Since Last Txn",
+                "Days Until Expiry", "Latest Payment Method"
+            ]
+            f_col3, f_col4 = st.columns(2)
+            half_2 = len(features_api2) // 2
+            with f_col3:
+                for f in features_api2[:half_2]: st.markdown(f"<span style='font-size:0.85em'>- {f}</span>", unsafe_allow_html=True)
+            with f_col4:
+                for f in features_api2[half_2:]: st.markdown(f"<span style='font-size:0.85em'>- {f}</span>", unsafe_allow_html=True)
+
+        # Show Launch button if it's the exact match OR if they are exploring all options
+        if show_api2_details:
+            if st.button("🚀 Launch API 2 Engine", type="primary", use_container_width=True, key="launch_2"):
+                st.switch_page("pages/3_kkbox.py")
+
+st.markdown("---")
 
 # Glossary
 with st.expander("📖 ML Metric Glossary (Click to expand)", expanded=False):

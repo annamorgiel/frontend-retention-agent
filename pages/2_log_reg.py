@@ -177,7 +177,7 @@ if "prediction_result" in st.session_state:
             SHAP Influences: {display_shap}
 
             Tasks:
-            1. Write an executive summary. Explicitly reference the top {shap_limit} features from the SHAP context to explain why the behavioral model made this specific prediction.
+            1. Write an executive summary of SHAP features and provided churn predictions. Explicitly reference the top {shap_limit} features from the SHAP context to explain why the behavioral model made this specific prediction. When using more than 3 features for analysis, make sure to reduce length while keeping the actionable feedback.
             2. Provide highly specific user interventions designed to directly neutralize the risk vectors identified by the SHAP values.
             """
             with st.spinner("Gemini is analyzing the SHAP force plot drivers..."):

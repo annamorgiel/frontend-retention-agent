@@ -5,3 +5,4 @@ matplotlib
 seaborn
 google-genai
 streamlit-navigation-bar
+plotly-express

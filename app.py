@@ -35,8 +35,8 @@ with nav_col:
 if page_selected == "👤 API 1: Behavioral Predictor": st.switch_page("pages/2_log_reg.py")
 elif page_selected == "💳 API 2: Transactional Predictor": st.switch_page("pages/3_kkbox.py")
 
-# Compact Title Area
-st.markdown("#### 🎯 Customer Retention Analytics Agent")
+# Sleeker Title Area
+st.markdown("##### 🎯 Customer Retention Analytics Agent")
 
 # 🧭 THE ROUTING WIZARD
 with st.container(border=True):
@@ -47,7 +47,7 @@ with st.container(border=True):
             "👤 Customer engagement behavioral data (Demographics, content preferences, support tickets)",
             "💳 Subscription and payment transactional data (Transaction logs, auto-renews, plan lengths)"
         ],
-        index=None  # 🔥 Starts empty to force user engagement
+        index=None
     )
 
 st.markdown("<br>", unsafe_allow_html=True)
@@ -57,14 +57,12 @@ is_unsure = data_type is not None and "Unsure" in data_type
 is_api1 = data_type is not None and "engagement" in data_type
 is_api2 = data_type is not None and "Subscription" in data_type
 
-# Determine Expander States
 show_api1_details = is_unsure or is_api1
 show_api2_details = is_unsure or is_api2
 
 col1, col2 = st.columns(2, gap="large")
 
 with col1:
-    # Highlight badge only appears if explicitly selected
     if is_api1: st.success("✨ **Best Match: API 1: Behavioral Predictor** 👤")
 
     with st.container(border=True):
@@ -84,33 +82,26 @@ with col1:
             with f_col2:
                 for f in features_api1[half_1:]: st.markdown(f"<span style='font-size:0.85em'>- {f}</span>", unsafe_allow_html=True)
 
-        # Launch button is now ALWAYS visible
         if st.button("🚀 Launch API 1: Behavioral Predictor Engine 👤", type="primary", use_container_width=True, key="launch_1"):
             st.switch_page("pages/2_log_reg.py")
 
 with col2:
-    # Highlight badge only appears if explicitly selected
     if is_api2: st.success("✨ **Best Match: API 2: Transactional Predictor** 💳 ")
 
     with st.container(border=True):
-        st.markdown("**💳 API 2: Transactional Predictor** with KKBox model trained on a non-synthetic dataset Sequential Engine")
+        st.markdown("**💳 API 2: Transactional Predictor** with KKBox model trained on a non-synthetic dataset (Sequential Engine)")
 
-        with st.expander("📋 View 18 Required Features", expanded=show_api2_details):
-            features_api2 = [
-                "City Code", "Cleaned Age", "Age Invalid Flag", "Gender Imputed",
-                "Registration Method", "Total Tenure", "Total Transactions", "Cancellations",
-                "Mean Actual Paid", "Sum Actual Paid", "Mean List Price", "Mean Plan Duration",
-                "Auto-Renew Ratio", "Unique Payment Methods", "Discount Ratio", "Days Since Last Txn",
-                "Days Until Expiry", "Latest Payment Method"
-            ]
+        with st.expander("📋 View 13 Required Features", expanded=show_api2_details):
             f_col3, f_col4 = st.columns(2)
-            half_2 = len(features_api2) // 2
             with f_col3:
-                for f in features_api2[:half_2]: st.markdown(f"<span style='font-size:0.85em'>- {f}</span>", unsafe_allow_html=True)
+                st.markdown("**Customer Activity**")
+                features_act = ["Days Since Joining", "Total Number of Transactions", "Days Since Last Transaction", "Most Recent Payment Method", "Gender", "Age"]
+                for f in features_act: st.markdown(f"<span style='font-size:0.85em'>- {f}</span>", unsafe_allow_html=True)
             with f_col4:
-                for f in features_api2[half_2:]: st.markdown(f"<span style='font-size:0.85em'>- {f}</span>", unsafe_allow_html=True)
+                st.markdown("**Financials**")
+                features_fin = ["Total Amount Spent ($)", "Average Subscription Price ($)", "Auto-Renewal Rate", "Days Until Subscription Expires", "Average Amount Paid per Transaction", "Average Subscription Length", "Discount Share"]
+                for f in features_fin: st.markdown(f"<span style='font-size:0.85em'>- {f}</span>", unsafe_allow_html=True)
 
-        # Launch button is now ALWAYS visible
         if st.button("🚀 Launch API 2: Transactional Predictor Engine 💳", type="primary", use_container_width=True, key="launch_2"):
             st.switch_page("pages/3_kkbox.py")
 

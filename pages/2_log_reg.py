@@ -1,8 +1,9 @@
 import streamlit as st
 import requests
+import pandas as pd
+import plotly.express as px
 from src.gemini_client import ask_gemini
 
-# 1. Page Config & CSS
 st.set_page_config(page_title="API 1: Behavioral Predictor", layout="wide", initial_sidebar_state="collapsed")
 st.markdown(
     """
@@ -11,34 +12,44 @@ st.markdown(
         @keyframes fadeIn { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } }
         .block-container { padding-top: 1.5rem !important; padding-bottom: 1rem !important; animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         div[data-testid="stVerticalBlock"] > div { gap: 0.3rem !important; }
+        .metric-card { padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 10px; }
     </style>
     """, unsafe_allow_html=True
 )
 
-# 2. Navigation
+# 🗺️ Translation Dictionary for API 1 Features
+API1_FEATURE_MAP = {
+    "AccountAge": "Account Age (Months)", "MonthlyCharges": "Monthly Charges ($)",
+    "TotalCharges": "Total Charges ($)", "SubscriptionType": "Subscription Type",
+    "PaymentMethod": "Payment Method", "PaperlessBilling": "Paperless Billing",
+    "ContentType": "Content Type", "MultiDeviceAccess": "Multi-Device Access",
+    "DeviceRegistered": "Registered Device", "ViewingHoursPerWeek": "Viewing Hours per Week",
+    "AverageViewingDuration": "Avg Viewing Duration (Mins)", "ContentDownloadsPerMonth": "Monthly Downloads",
+    "GenrePreference": "Preferred Genre", "UserRating": "User Rating",
+    "SupportTicketsPerMonth": "Monthly Support Tickets", "Gender": "Gender",
+    "WatchlistSize": "Watchlist Size", "ParentalControl": "Parental Controls Enabled",
+    "SubtitlesEnabled": "Subtitles Enabled"
+}
+
 nav_col, _ = st.columns([3, 1])
 with nav_col:
     page_selected = st.segmented_control(
-        label="Nav",
-        options=["🏠 Home Portal", "👤 API 1: Behavioral Predictor", "💳 API 2: Transactional Predictor"],
-        default="👤 API 1: Behavioral Predictor",
-        label_visibility="collapsed",
-        key="nav_p2"
+        label="Nav", options=["🏠 Home Portal", "👤 API 1: Behavioral Predictor", "💳 API 2: Transactional Predictor"],
+        default="👤 API 1: Behavioral Predictor", label_visibility="collapsed", key="nav_p2"
     )
 if page_selected == "🏠 Home Portal": st.switch_page("app.py")
 elif page_selected == "💳 API 2: Transactional Predictor": st.switch_page("pages/3_kkbox.py")
 
-st.markdown("### 👤 API 1: Behavioral Predictor (with SHAP Explanations)")
+st.markdown("#### 👤 API 1: Behavioral Predictor (with SHAP Explanations)")
 
-# 3. Callbacks (Mock Data & Reset)
 def load_mock_api1():
     st.session_state.update({
         "p2_gender": "Male", "p2_subtype": "Premium", "p2_paperless": "Yes",
-        "p2_total_charges": 1919.76, "p2_age": 24, "p2_payment": "Electronic check",
-        "p2_monthly_charges": 79.99, "p2_tickets": 1, "p2_content": "Both",
-        "p2_hours": 15.5, "p2_downloads": 5, "p2_rating": 4.5,
-        "p2_parental": "Yes", "p2_genre": "Sci-Fi", "p2_duration": 120,
-        "p2_watchlist": 12, "p2_device": "TV", "p2_multidevice": "Yes", "p2_subtitles": "Yes"
+        "p2_total_charges": 1788.00, "p2_age": 12, "p2_payment": "Electronic check",
+        "p2_monthly_charges": 149.00, "p2_tickets": 0, "p2_content": "Both",
+        "p2_hours": 20.0, "p2_downloads": 10, "p2_rating": 4.5,
+        "p2_parental": "No", "p2_genre": "Action", "p2_duration": 120,
+        "p2_watchlist": 15, "p2_device": "Mobile", "p2_multidevice": "Yes", "p2_subtitles": "Yes"
     })
 
 def reset_api1():
@@ -54,17 +65,11 @@ def reset_api1():
 
 inputs_are_open = "prediction_result" not in st.session_state
 
-# 4. Inputs
 with st.expander("👤 Configure Behavioral Metrics", expanded=inputs_are_open):
-
     btn_col1, btn_col2 = st.columns(2)
-    with btn_col1:
-        st.button("🪄 Auto-Fill Mock Data", on_click=load_mock_api1, key="p2_mock_btn", use_container_width=True)
-    with btn_col2:
-        st.button("🗑️ Reset All Fields", on_click=reset_api1, key="p2_reset_fields_btn", use_container_width=True)
-
+    with btn_col1: st.button("🪄 Auto-Fill Mock Data", on_click=load_mock_api1, key="p2_mock_btn", use_container_width=True)
+    with btn_col2: st.button("🗑️ Reset All Fields", on_click=reset_api1, key="p2_reset_fields_btn", use_container_width=True)
     st.markdown("---")
-
     left_main, right_main = st.columns(2, gap="medium")
     with left_main:
         col_a, col_b = st.columns(2)
@@ -96,10 +101,8 @@ with st.expander("👤 Configure Behavioral Metrics", expanded=inputs_are_open):
 
     run_prediction = st.button("🚀 Run Behavioral Prediction & SHAP Analysis", use_container_width=True, type="primary", key="p2_btn_submit")
 
-# 5. API Execution & Validation
 if run_prediction:
     inputs_list = [account_age, monthly_charges, total_charges, subscription_type, payment_method, paperless_billing, content_type, multi_device, device_registered, viewing_hours, avg_duration, downloads, genre_preference, user_rating, support_tickets, gender, watchlist_size, parental_control, subtitles]
-
     if any(i is None for i in inputs_list):
         st.warning("⚠️ Please fill in all fields or click 'Auto-Fill Mock Data' before running the prediction.")
     else:
@@ -112,79 +115,102 @@ if run_prediction:
             "SupportTicketsPerMonth": int(support_tickets), "Gender": gender, "WatchlistSize": int(watchlist_size),
             "ParentalControl": parental_control, "SubtitlesEnabled": subtitles
         }
-
         BASE_URL = "https://retention-agent-api-306889378080.europe-west1.run.app"
-
         with st.spinner("Analyzing subscriber data and fetching SHAP values..."):
             try:
                 res_pred = requests.get(f"{BASE_URL}/predict", params=payload, timeout=7)
                 if res_pred.status_code == 200:
                     st.session_state.prediction_result = res_pred.json()
                     st.session_state.last_payload = payload
-
                     try:
                         res_expl = requests.get(f"{BASE_URL}/explain", params=payload, timeout=5)
-                        if res_expl.status_code != 200:
-                            res_expl = requests.post(f"{BASE_URL}/explain", json=payload, timeout=5)
-
-                        if res_expl.status_code == 200:
-                            st.session_state.explanation_result = res_expl.json()
-                        else:
-                            st.session_state.explanation_result = {"Notice": f"SHAP API returned HTTP {res_expl.status_code}."}
-                    except Exception:
-                        st.session_state.explanation_result = {"Notice": "SHAP API was unreachable."}
-
+                        if res_expl.status_code != 200: res_expl = requests.post(f"{BASE_URL}/explain", json=payload, timeout=5)
+                        if res_expl.status_code == 200: st.session_state.explanation_result = res_expl.json()
+                        else: st.session_state.explanation_result = {"Notice": f"SHAP API returned HTTP {res_expl.status_code}."}
+                    except Exception: st.session_state.explanation_result = {"Notice": "SHAP API was unreachable."}
                     st.rerun()
-                else:
-                    st.error(f"❌ Main Predict Endpoint Failed: {res_pred.status_code}")
-                    st.code(res_pred.text)
-            except requests.exceptions.RequestException as e:
-                st.error(f"❌ Cloud service connection error: {e}")
+                else: st.error(f"❌ Predict Failed: {res_pred.status_code}")
+            except requests.exceptions.RequestException as e: st.error(f"❌ Cloud error: {e}")
 
-# 6. Output & Gemini (Frontend Filtering)
 if "prediction_result" in st.session_state:
     out_col1, out_col2 = st.columns([1, 2], gap="large")
 
+    prob = st.session_state.prediction_result.get("churn_probability", 0)
+
     with out_col2:
         with st.container(border=True):
-            st.markdown("**⚙️ Adjust SHAP Scope (Frontend)**")
-            shap_limit = st.radio(
-                "Number of features to display and analyze:",
-                options=["1", "2", "3", "4", "5"],
-                index=4, horizontal=True, key="p2_shap_limit"
-            )
+            st.markdown("**⚙️ Select number of SHAP features to be analyzed**")
+            shap_limit = st.radio("Number of features to display and analyze:", options=["1", "2", "3", "4", "5"], index=4, horizontal=True, key="p2_shap_limit")
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # ✂️ Slice the SHAP results cleanly to remove redundant prediction keys
         raw_shap = st.session_state.explanation_result
-        display_shap = raw_shap
-
         limit = int(shap_limit)
+        drivers_list = []
         if isinstance(raw_shap, dict) and "top_drivers" in raw_shap:
-            # Extract only the drivers list and slice it
-            display_shap = {"top_drivers": raw_shap["top_drivers"][:limit]}
-        elif isinstance(raw_shap, dict) and "Notice" not in raw_shap:
-            display_shap = dict(list(raw_shap.items())[:limit])
-        elif isinstance(raw_shap, list):
-            display_shap = raw_shap[:limit]
+            drivers_list = raw_shap["top_drivers"][:limit]
+
+        # Translate drivers for Gemini so it understands the friendly names
+        gemini_context = []
+        for d in drivers_list:
+            raw_f = d.get("feature", "").replace("num__", "").replace("cat__", "")
+            friendly_f = API1_FEATURE_MAP.get(raw_f, raw_f)
+            val = d.get("shap_value", 0)
+            impact = "Increases Risk" if val > 0 else "Decreases Risk"
+            gemini_context.append(f"{friendly_f}: {impact} ({val:.3f})")
 
         if st.button("✨ Ask Gemini for SHAP-Guided Strategies", use_container_width=True, key="p2_btn_gemini"):
             prompt = f"""
             You are an expert customer retention data scientist specializing in behavioral profiling.
             Profile: {st.session_state.last_payload}
-            Churn Probability: {st.session_state.prediction_result}
-            SHAP Influences: {display_shap}
+            Churn Probability: {prob}
+            SHAP Influences (Top {shap_limit}):
+            {chr(10).join(gemini_context)}
 
             Tasks:
             1. Write an executive summary of SHAP features and provided churn predictions. Explicitly reference the top {shap_limit} features from the SHAP context to explain why the behavioral model made this specific prediction. When using more than 3 features for analysis, make sure to reduce length while keeping the actionable feedback.
             2. Provide highly specific user interventions designed to directly neutralize the risk vectors identified by the SHAP values.
             """
-            with st.spinner("Gemini is analyzing the SHAP force plot drivers..."):
-                st.write(ask_gemini(prompt))
+            with st.spinner("Gemini is analyzing the SHAP force plot drivers..."): st.write(ask_gemini(prompt))
 
     with out_col1:
         st.markdown("##### 📋 Prediction Output")
-        st.json(st.session_state.prediction_result)
-        st.markdown("##### 🔍 Computed SHAP Values")
-        st.json(display_shap)
+        if prob < 0.35: st.success(f"**✅ Safe (Low Risk)** \nChurn Probability: **{prob*100:.1f}%**")
+        elif prob < 0.70: st.warning(f"**⚠️ Warning (Medium Risk)** \nChurn Probability: **{prob*100:.1f}%**")
+        else: st.error(f"**🚨 Danger (High Risk)** \nChurn Probability: **{prob*100:.1f}%**")
+
+        st.markdown("##### 🔍 Local SHAP Impact (Log-Odds)")
+
+        if drivers_list:
+            for d in drivers_list:
+                raw_feat = d.get("feature", "Unknown").replace("num__", "").replace("cat__", "")
+                friendly_feat = API1_FEATURE_MAP.get(raw_feat, raw_feat)
+
+                val = d.get("shap_value", 0)
+                direction = "increases" if val > 0 else "decreases"
+
+                if direction == "increases":
+                    st.markdown(f"<div class='metric-card'><b>{friendly_feat}</b><br>🔴 Increases Risk (+{val:.3f})</div>", unsafe_allow_html=True)
+                else:
+                    st.markdown(f"<div class='metric-card'><b>{friendly_feat}</b><br>🟢 Decreases Risk (-{abs(val):.3f})</div>", unsafe_allow_html=True)
+
+            df_shap = pd.DataFrame(drivers_list)
+            df_shap["feature"] = df_shap["feature"].str.replace("num__", "").str.replace("cat__", "")
+            # Apply translation map to dataframe
+            df_shap["feature"] = df_shap["feature"].map(lambda x: API1_FEATURE_MAP.get(x, x))
+            df_shap["direction"] = df_shap["shap_value"].apply(lambda x: "increases" if float(x) > 0 else "decreases")
+            df_shap['abs_shap'] = df_shap['shap_value'].abs()
+            df_shap = df_shap.sort_values(by='abs_shap', ascending=True)
+
+            fig = px.bar(
+                df_shap, x="shap_value", y="feature", orientation='h', color="direction",
+                color_discrete_map={"increases": "#ff4b4b", "decreases": "#00cc96"},
+                labels={"shap_value": "SHAP Impact", "feature": ""}
+            )
+            fig.update_layout(
+                showlegend=False, margin=dict(l=0, r=0, t=10, b=0),
+                height=max(200, len(df_shap) * 40), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)"
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("No SHAP drivers available to display.")

@@ -91,7 +91,7 @@ def reset_api2():
 inputs_are_open = "kkbox_prediction_result" not in st.session_state
 
 with st.expander("Input mandatory and optional data", expanded=inputs_are_open):
-    btn_col1, btn_col2, _ = st.columns([1, 1, 4])
+    btn_col1, btn_col2 = st.columns(2)
     with btn_col1: st.button("✨ Auto-Fill Mock Data", on_click=load_mock_api2, key="p3_mock_btn", use_container_width=True)
     with btn_col2: st.button("🗑️ Reset Fields", on_click=reset_api2, key="p3_reset_fields_btn", use_container_width=True)
 
@@ -282,7 +282,7 @@ if "kkbox_prediction_result" in st.session_state:
             st.markdown("<div class='req-header' style='margin-top:0;'>AI Strategy Agent</div>", unsafe_allow_html=True)
             st.markdown("<div class='muted-text' style='margin-bottom:15px;'>Generate personalized retention recommendations.</div>", unsafe_allow_html=True)
 
-            if st.button("🧠 Ask Gemini for retention strategies based on churn drivers", use_container_width=True, type="primary", key="p3_btn_gemini"):
+            if st.button("🧠 Ask Gemini Agent for Intervention Plan based on churn drivers", use_container_width=True, type="primary", key="p3_btn_gemini"):
                 prompt = f"""
                 You are an expert customer retention data scientist specializing in transactional behavior and subscription platforms.
                 Profile: {st.session_state.kkbox_last_payload}
@@ -294,6 +294,6 @@ if "kkbox_prediction_result" in st.session_state:
                 1. Write an executive churn prevention summary based on SHAP features and provided churn predictions. Explicitly reference the top {shap_limit} features from the SHAP context to explain why the model made this specific prediction. When using more than 3 features for analysis, make sure to reduce length while keeping the actionable feedback.
                 2. Provide highly specific user interventions designed to directly neutralize the risk vectors identified by the SHAP values.
                 """
-                with st.spinner("Gemini is analyzing the key churn drivers...."):
+                with st.spinner("Retention agent is analyzing the key churn drivers...."):
                     with st.container(border=True):
                         st.write(ask_gemini(prompt))

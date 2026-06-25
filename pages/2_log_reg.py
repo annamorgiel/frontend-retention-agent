@@ -97,7 +97,7 @@ def reset_api1():
 inputs_are_open = "prediction_result" not in st.session_state
 
 with st.expander("Input mandatory and optional features", expanded=inputs_are_open):
-    btn_col1, btn_col2, _ = st.columns([1, 1, 4])
+    btn_col1, btn_col2 = st.columns(2)
     with btn_col1: st.button("✨ Auto-Fill Mock Data", on_click=load_mock_api1, use_container_width=True)
     with btn_col2: st.button("🗑️ Reset Fields", on_click=reset_api1, use_container_width=True)
 
@@ -299,7 +299,7 @@ if "prediction_result" in st.session_state:
             st.markdown("<div class='req-header' style='margin-top:0;'>AI Strategy Agent</div>", unsafe_allow_html=True)
             st.markdown("<div class='muted-text' style='margin-bottom:15px;'>Provide personalized recommended actions to reduce the churn risk.</div>", unsafe_allow_html=True)
 
-            if st.button("🧠 Ask Gemini for retention strategies based on churn drivers", use_container_width=True, type="primary"):
+            if st.button("🧠 Ask Gemini Agent for Intervention Plan based on churn drivers", use_container_width=True, type="primary"):
                 prompt = f"""
                 You are an expert customer retention data scientist specializing in behavioral profiling.
                 Profile: {st.session_state.last_payload}
@@ -311,7 +311,7 @@ if "prediction_result" in st.session_state:
                 1. Write an executive churn prevention insights based on SHAP features and provided churn predictions. Explicitly reference the top {shap_limit} features from the SHAP context to explain why the model made this specific prediction. When using more than 3 features for analysis, make sure to reduce length while keeping the actionable feedback.
                 2. Provide highly specific user interventions designed to directly neutralize the risk vectors identified by the SHAP values.
                 """
-                with st.spinner("Gemini is analyzing the key churn drivers..."):
+                with st.spinner("Retention agent is analyzing the key churn drivers..."):
                     # The response itself gets its own inner visual boundary
                     with st.container(border=True):
                         st.write(ask_gemini(prompt))

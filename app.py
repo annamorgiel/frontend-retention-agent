@@ -42,7 +42,7 @@ elif page_selected == "💳 Transactional predictor engine": st.switch_page("pag
 
 # Sleeker Title Area
 st.markdown("#### Intelligent Customer Retention Agent")
-st.markdown("##### Asses churn risk and identify prevention measures")
+st.markdown("##### Assess churn risk and identify prevention measures")
 
 # 🧭 THE ROUTING WIZARD
 with st.container(border=True):

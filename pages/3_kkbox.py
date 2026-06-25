@@ -5,7 +5,7 @@ import plotly.express as px
 from src.gemini_client import ask_gemini
 
 # --- CONFIGURATION & CONSTANTS ---
-st.set_page_config(page_title="API 2: Transactional Predictor", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Transactional predictor engine", layout="wide", initial_sidebar_state="collapsed")
 
 # --- CSS (ALIGNED WITH PAGE 2) ---
 st.markdown(
@@ -58,16 +58,15 @@ nav_col, _ = st.columns([3, 1])
 with nav_col:
     page_selected = st.segmented_control(
         label="Navigation Menu",
-        options=["🏠 Home Portal", "👤 API 1: Behavioral Predictor", "💳 API 2: Transactional Predictor"],
-        default="💳 API 2: Transactional Predictor",
+        options=["🏠 Home Portal", "👤 Behavioral predictor engine", "💳 Transactional predictor engine"],
+        default="💳 Transactional predictor engine",
         label_visibility="collapsed",
         key="nav_p3"
     )
 if page_selected == "🏠 Home Portal": st.switch_page("app.py")
-elif page_selected == "👤 API 1: Behavioral Predictor": st.switch_page("pages/2_log_reg.py")
+elif page_selected == "👤 Behavioral predictor engine": st.switch_page("pages/2_log_reg.py")
 
-st.markdown("<h3 style='color: #111827; margin-bottom: 0; margin-top: 10px;'>API 2: Transactional Predictor</h3>", unsafe_allow_html=True)
-st.markdown("<div class='muted-text' style='margin-bottom: 15px;'>Sequential Model Engine with SHAP Explanations</div>", unsafe_allow_html=True)
+st.markdown("<h3 style='color: #111827; margin-bottom: 0; margin-top: 10px;'>Transactional predictor engine</h3>", unsafe_allow_html=True)
 
 # --- STATE MANAGEMENT ---
 def load_mock_api2():
@@ -91,7 +90,7 @@ def reset_api2():
 # --- DATA ENTRY UI ---
 inputs_are_open = "kkbox_prediction_result" not in st.session_state
 
-with st.expander("Configure Transactional Metrics", expanded=inputs_are_open):
+with st.expander("Input mandatory and optional data", expanded=inputs_are_open):
     btn_col1, btn_col2, _ = st.columns([1, 1, 4])
     with btn_col1: st.button("✨ Auto-Fill Mock Data", on_click=load_mock_api2, key="p3_mock_btn", use_container_width=True)
     with btn_col2: st.button("🗑️ Reset Fields", on_click=reset_api2, key="p3_reset_fields_btn", use_container_width=True)
@@ -130,7 +129,7 @@ with st.expander("Configure Transactional Metrics", expanded=inputs_are_open):
         """)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    run_prediction = st.button("🚀 Launch Model & SHAP Explainer", use_container_width=True, type="primary", key="p3_btn_submit")
+    run_prediction = st.button("🚀 Predict churn probability and top churn-driving features", use_container_width=True, type="primary", key="p3_btn_submit")
 
 # --- EXECUTION LOGIC ---
 if run_prediction:
@@ -157,7 +156,7 @@ if run_prediction:
             "mean_auto_renew": float(mean_auto_renew), "days_until_expiry_at_cutoff": float(days_until_expiry_at_cutoff)
         }
         BASE_URL = "https://retention-agent-api-306889378080.europe-west1.run.app"
-        with st.spinner("Analyzing transactional profile and fetching SHAP values..."):
+        with st.spinner("Computing churn probability and churn driving features..."):
             try:
                 # Timout increased to 30
                 res_pred = requests.get(f"{BASE_URL}/predict_kkbox", params=payload, timeout=30)
@@ -176,7 +175,7 @@ if run_prediction:
                     except Exception: st.session_state.kkbox_shap_result = {"Notice": "SHAP API was unreachable."}
                     st.rerun()
                 else: st.error(f"Predict Failed: {res_pred.status_code}")
-            except requests.exceptions.RequestException as e: st.error(f"Cloud error: {e}")
+            except requests.exceptions.RequestException as e: st.error(f"Cloud error: {e}. This can happen with too many requests. Try again!")
 
 # --- ELEGANT RESULTS DASHBOARD (ALIGNED WITH PAGE 2) ---
 if "kkbox_prediction_result" in st.session_state:
@@ -221,7 +220,7 @@ if "kkbox_prediction_result" in st.session_state:
             with h_col1:
                 st.markdown("<div style='font-size:0.9em; font-weight:600; padding-top:8px;'>SHAP Features:</div>", unsafe_allow_html=True)
             with h_col2:
-                shap_limit = st.radio("Features:", options=["1", "2", "3", "4", "5"], index=4, horizontal=True, label_visibility="collapsed", key="p3_shap_limit")
+                shap_limit = st.radio("Number of top churn-driving features to analyze:", options=["1", "2", "3", "4", "5"], index=4, horizontal=True, label_visibility="collapsed", key="p3_shap_limit")
 
             limit = int(shap_limit)
             drivers_list = raw_shap.get("top_drivers", [])[:limit] if isinstance(raw_shap, dict) else []
@@ -281,9 +280,9 @@ if "kkbox_prediction_result" in st.session_state:
     with out_col2:
         with st.container(border=True):
             st.markdown("<div class='req-header' style='margin-top:0;'>AI Strategy Agent</div>", unsafe_allow_html=True)
-            st.markdown("<div class='muted-text' style='margin-bottom:15px;'>Generate personalized retention interventions directly targeting the vectors identified by the SHAP log-odds.</div>", unsafe_allow_html=True)
+            st.markdown("<div class='muted-text' style='margin-bottom:15px;'>Generate personalized retention recommendations.</div>", unsafe_allow_html=True)
 
-            if st.button("🧠 Ask Gemini for SHAP-Guided Strategies", use_container_width=True, type="primary", key="p3_btn_gemini"):
+            if st.button("🧠 Ask Gemini for retention strategies based on churn drivers", use_container_width=True, type="primary", key="p3_btn_gemini"):
                 prompt = f"""
                 You are an expert customer retention data scientist specializing in transactional behavior and subscription platforms.
                 Profile: {st.session_state.kkbox_last_payload}
@@ -295,6 +294,6 @@ if "kkbox_prediction_result" in st.session_state:
                 1. Write an executive churn prevention summary based on SHAP features and provided churn predictions. Explicitly reference the top {shap_limit} features from the SHAP context to explain why the model made this specific prediction. When using more than 3 features for analysis, make sure to reduce length while keeping the actionable feedback.
                 2. Provide highly specific user interventions designed to directly neutralize the risk vectors identified by the SHAP values.
                 """
-                with st.spinner("Gemini is analyzing the SHAP force plot drivers..."):
+                with st.spinner("Gemini is analyzing the key churn drivers...."):
                     with st.container(border=True):
                         st.write(ask_gemini(prompt))

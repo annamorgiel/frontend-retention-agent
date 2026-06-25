@@ -1,6 +1,6 @@
 import streamlit as st
 
-st.set_page_config(page_title="Customer Retention Agent", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Intelligent Customer Retention Agent", layout="wide", initial_sidebar_state="collapsed")
 
 # MACBOOK OPTIMIZED CSS & COMPACT LIST STYLES
 st.markdown(
@@ -33,24 +33,25 @@ nav_col, _ = st.columns([3, 1])
 with nav_col:
     page_selected = st.segmented_control(
         label="Navigation Menu",
-        options=["🏠 Home Portal", "👤 API 1: Behavioral Predictor", "💳 API 2: Transactional Predictor"],
+        options=["🏠 Home Portal", "👤 Behavioral predictor engine", "💳 Transactional predictor engine"],
         default="🏠 Home Portal", label_visibility="collapsed", key="nav_home"
     )
 
-if page_selected == "👤 API 1: Behavioral Predictor": st.switch_page("pages/2_log_reg.py")
-elif page_selected == "💳 API 2: Transactional Predictor": st.switch_page("pages/3_kkbox.py")
+if page_selected == "👤 Behavioral predictor engine": st.switch_page("pages/2_log_reg.py")
+elif page_selected == "💳 Transactional predictor engine": st.switch_page("pages/3_kkbox.py")
 
 # Sleeker Title Area
-st.markdown("### Customer Retention Analytics Agent - asses churn risk and identify prevention measures")
+st.markdown("#### Intelligent Customer Retention Agent")
+st.markdown("##### Asses churn risk and identify prevention measures")
 
 # 🧭 THE ROUTING WIZARD
 with st.container(border=True):
     data_type = st.radio(
         "**Which data do you primarily have?**",
         [
-            "🔍 Unsure / Show me all options",
-            "👤 Customer engagement behavioral data (Demographics, content preferences, support tickets)",
-            "💳 Subscription and payment transactional data (Transaction logs, auto-renews, plan lengths)"
+            "🔍 Unsure / Show me both options",
+            "👤 Behavioral data: demographics, content preferences, preferred genre",
+            "💳 Transactional data: payment data, transaction logs, auto-renews, plan lengths"
         ],
         index=None
     )
@@ -59,8 +60,8 @@ st.markdown("<br>", unsafe_allow_html=True)
 
 # Smart State Routing Logic
 is_unsure = data_type is not None and "Unsure" in data_type
-is_api1 = data_type is not None and "engagement" in data_type
-is_api2 = data_type is not None and "Subscription" in data_type
+is_api1 = data_type is not None and "Behavioral" in data_type
+is_api2 = data_type is not None and "Transactional" in data_type
 
 show_api1_details = is_unsure or is_api1
 show_api2_details = is_unsure or is_api2
@@ -68,11 +69,9 @@ show_api2_details = is_unsure or is_api2
 col1, col2 = st.columns(2, gap="large")
 
 with col1:
-    if is_api1: st.success("✨ **Best Match: API 1: Behavioral Predictor**")
+    if is_api1: st.success("✨ **Best Match: Behavioral predictor engine**")
 
     with st.container(border=True):
-        st.markdown("**API 1: Behavioral Predictor with local SHAP values for explainability**\n\n<span style='font-size:0.9em; color:#888'>Logistic Regression model trained on a synthetic dataset</span>", unsafe_allow_html=True)
-
         with st.expander("View Data Requirements", expanded=show_api1_details):
             f_col1, f_col2 = st.columns(2)
 
@@ -89,7 +88,7 @@ with col1:
                 <div class='req-category'>Engagement & Usage</div>
                 <div class='req-list'>
                     - Avg Viewing Duration<br>
-                    - Monthly Downloads<br>
+                    - Monthly Downloads Number<br>
                     - Viewing Hours / Week<br>
                     - Preferred Genre
                 </div>
@@ -111,15 +110,13 @@ with col1:
                 </div>
                 """, unsafe_allow_html=True)
 
-        if st.button("Launch API 1: Behavioral Predictor", type="primary", use_container_width=True, key="launch_1"):
+        if st.button("Launch model: Behavioral predictor", type="primary", use_container_width=True, key="launch_1"):
             st.switch_page("pages/2_log_reg.py")
 
 with col2:
-    if is_api2: st.success("✨ **Best Match: API 2: Transactional Predictor**")
+    if is_api2: st.success("✨ **Best Match: Transactional predictor engine**")
 
     with st.container(border=True):
-        st.markdown("**API 2: Transactional Predictor with local SHAP values for explainability**\n\n<span style='font-size:0.9em; color:#888'>KKBox model trained on a real-world dataset (Sequential Engine)</span>", unsafe_allow_html=True)
-
         with st.expander("View Data Requirements", expanded=show_api2_details):
             f_col3, f_col4 = st.columns(2)
 
@@ -157,7 +154,7 @@ with col2:
                 </div>
                 """, unsafe_allow_html=True)
 
-        if st.button("Launch API 2: Transactional Predictor", type="primary", use_container_width=True, key="launch_2"):
+        if st.button("Launch model: Transactional predictor", type="primary", use_container_width=True, key="launch_2"):
             st.switch_page("pages/3_kkbox.py")
 
 # Glossary
